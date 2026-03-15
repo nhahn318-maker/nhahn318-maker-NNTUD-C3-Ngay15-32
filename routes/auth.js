@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
 let userController = require('../controllers/users')
-let { RegisterValidator, validatedResult } = require('../utils/validator')
+let { RegisterValidator, ChangePasswordValidator, validatedResult } = require('../utils/validator')
 let {CheckLogin} = require('../utils/authHandler')
 //login
 router.post('/login',async function (req, res, next) {
@@ -23,6 +23,26 @@ router.post('/register', RegisterValidator, validatedResult, async function (req
 })
 router.get('/me',CheckLogin,function(req,res,next){
     res.send(req.user)
+})
+
+router.put('/changepassword', CheckLogin, ChangePasswordValidator, validatedResult, async function (req, res, next) {
+    if (!req.user || !req.user[0]) {
+        res.status(403).send({ message: "ban chua dang nhap" });
+        return;
+    }
+
+    let result = await userController.ChangePassword(
+        req.user[0]._id,
+        req.body.oldpassword,
+        req.body.newpassword
+    );
+
+    if (!result.success) {
+        res.status(400).send({ message: result.message });
+        return;
+    }
+
+    res.send({ message: result.message });
 })
 
 //register
